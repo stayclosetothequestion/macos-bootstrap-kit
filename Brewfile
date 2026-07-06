@@ -1,5 +1,3 @@
-tap "homebrew/bundle"
-
 # CLI essentials
 brew "git"      # Version control
 
