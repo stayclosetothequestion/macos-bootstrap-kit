@@ -1,6 +1,6 @@
 # Tool Selection
 
-This document keeps the install list simple: tools explicitly requested by the user, and tools recommended for the bootstrap/agent-runtime setup.
+This document keeps the install list intentionally small: only tools required for a fresh macOS agent-runtime setup.
 
 ## Requested Tools
 
@@ -17,7 +17,7 @@ This document keeps the install list simple: tools explicitly requested by the u
 | Microsoft Edge | Browser requested for daily use and web testing. |
 | Telegram | Messaging app requested for chat. |
 
-## Recommended Tools
+## Minimal Supporting Tools
 
 | Tool | Why it is needed for this project |
 |---|---|
@@ -26,10 +26,32 @@ This document keeps the install list simple: tools explicitly requested by the u
 | nvm | Keeps the Node.js version explicit and replaceable for agent tools and JavaScript projects. |
 | pyenv | Keeps the Python version explicit and avoids relying on Apple's system Python. |
 | pipx | Installs Python CLI apps in isolated environments so global Python does not become messy. |
-| curl | Standard HTTP client for bootstrap steps, API checks, local service health checks, and diagnostics. |
-| jq | JSON processor for shell scripts, Docker output, cloud CLI output, logs, and API responses. |
-| ripgrep | Fast code/config search; useful for agents analyzing projects. |
 | Docker CLI / Colima | Lean headless container runtime for local agent workloads without Docker Desktop. |
+
+## Excluded From Minimal Setup
+
+| Tool | Why it is excluded |
+|---|---|
+| Google Chrome | Microsoft Edge is enough as the single default browser for login and web workflows. |
+| VS Code | Useful for humans, but not required for a terminal-first agent runtime. |
+| curl via Homebrew | macOS already includes system `curl`, which is enough for bootstrap downloads. |
+| jq | Useful for shell JSON work, but not required; agents can use Python or Node.js. |
+| ripgrep | Useful for fast search, but Claude Code usually includes its own search dependency. |
+| fd | Convenient replacement for `find`, but not required for agents. |
+| iTerm2 | Human terminal convenience; standard Terminal is enough. |
+| Rectangle | Human window-management convenience. |
+| wget | Duplicates system `curl` for our use case. |
+| fzf | Interactive human convenience, not an agent runtime requirement. |
+| tree | Nice directory overview, but not required. |
+| htop | Manual process monitoring, not required for bootstrap. |
+| mas | Not needed because the setup does not install Mac App Store apps. |
+
+## Future Optional Tools
+
+Enable these only after deciding on monitoring and Google Cloud deployment:
+
+| Tool | Why it may be added later |
+|---|---|
 | osquery | Host inventory and audit layer for processes, users, ports, launchd services, installed apps, and selected file changes. |
 | fluent-bit | Lightweight log forwarder for sending bootstrap, runtime, osquery, and selected macOS logs to a logging backend. |
 | google-cloud-sdk | Google Cloud CLI for future Cloud Run, GKE, Artifact Registry, IAM, logging, and deployment work. |

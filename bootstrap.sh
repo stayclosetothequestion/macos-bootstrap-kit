@@ -3,7 +3,6 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="${ROOT_DIR}/config/bootstrap.conf"
-EXPORTED_SETTINGS_FILE="${ROOT_DIR}/config/exported-macos-settings.conf"
 BREWFILE="${ROOT_DIR}/Brewfile"
 
 if [[ -f "${CONFIG_FILE}" ]]; then
@@ -15,18 +14,6 @@ else
 fi
 
 DRY_RUN="${DRY_RUN:-0}"
-SKIP_MACOS_DEFAULTS="${SKIP_MACOS_DEFAULTS:-0}"
-USE_EXPORTED_SETTINGS="${USE_EXPORTED_SETTINGS:-0}"
-
-if [[ "${USE_EXPORTED_SETTINGS}" == "1" ]]; then
-  if [[ -f "${EXPORTED_SETTINGS_FILE}" ]]; then
-    # shellcheck source=/dev/null
-    source "${EXPORTED_SETTINGS_FILE}"
-  else
-    echo "Requested exported settings, but file is missing: ${EXPORTED_SETTINGS_FILE}" >&2
-    exit 1
-  fi
-fi
 
 log() {
   printf "\n==> %s\n" "$*"
@@ -135,11 +122,6 @@ check_container_runtime() {
 
   if [[ "${DRY_RUN}" == "1" ]]; then
     echo "[dry-run] check docker, docker-compose, and colima"
-    if [[ "${START_COLIMA:-0}" == "1" ]]; then
-      run colima start --cpu "${COLIMA_CPU}" --memory "${COLIMA_MEMORY}" --disk "${COLIMA_DISK}"
-    else
-      echo "[dry-run] optionally run: colima start --cpu ${COLIMA_CPU} --memory ${COLIMA_MEMORY} --disk ${COLIMA_DISK}"
-    fi
     return
   fi
 
@@ -159,14 +141,6 @@ check_container_runtime() {
     colima version
   else
     echo "colima is not on PATH after brew bundle." >&2
-    return
-  fi
-
-  if [[ "${START_COLIMA:-0}" == "1" ]]; then
-    run colima start --cpu "${COLIMA_CPU}" --memory "${COLIMA_MEMORY}" --disk "${COLIMA_DISK}"
-  else
-    echo "Colima installed. Start it when needed with:"
-    echo "  colima start --cpu ${COLIMA_CPU} --memory ${COLIMA_MEMORY} --disk ${COLIMA_DISK}"
   fi
 }
 
@@ -231,36 +205,6 @@ install_global_npm_packages() {
   run npm install -g "${NPM_GLOBAL_PACKAGES[@]}"
 }
 
-apply_macos_defaults() {
-  if [[ "${SKIP_MACOS_DEFAULTS}" == "1" ]]; then
-    log "Skipping macOS defaults"
-    return
-  fi
-
-  log "Applying macOS defaults"
-  run mkdir -p "${SCREENSHOT_DIR}"
-
-  run defaults write com.apple.dock orientation -string "${DOCK_POSITION}"
-  run defaults write com.apple.dock tilesize -int "${DOCK_ICON_SIZE}"
-  run defaults write com.apple.dock autohide -bool "${DOCK_AUTOHIDE}"
-
-  run defaults write NSGlobalDomain KeyRepeat -int "${KEY_REPEAT}"
-  run defaults write NSGlobalDomain InitialKeyRepeat -int "${INITIAL_KEY_REPEAT}"
-  run defaults write NSGlobalDomain AppleLanguages -array "${APPLE_LANGUAGES[@]}"
-  run defaults write NSGlobalDomain AppleLocale -string "${APPLE_LOCALE}"
-  run defaults write NSGlobalDomain AppleMeasurementUnits -string "${APPLE_MEASUREMENT_UNITS}"
-  run defaults write NSGlobalDomain AppleMetricUnits -bool "${APPLE_METRIC_UNITS}"
-
-  run defaults write NSGlobalDomain AppleShowAllExtensions -bool "${FINDER_SHOW_ALL_EXTENSIONS}"
-  run defaults write com.apple.finder AppleShowAllFiles -bool "${FINDER_SHOW_HIDDEN_FILES}"
-  run defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
-  run defaults write com.apple.screencapture location -string "${SCREENSHOT_DIR}"
-
-  run killall Dock
-  run killall Finder
-  run killall SystemUIServer
-}
-
 main() {
   log "Starting macos-bootstrap-kit"
   ensure_xcode_cli_tools
@@ -271,7 +215,6 @@ main() {
   setup_nvm
   install_global_npm_packages
   setup_pyenv
-  apply_macos_defaults
   log "Done. Restart the terminal, then run: node --version && python --version && docker --version && colima version && claude --version && codex --version"
 }
 
